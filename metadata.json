@@ -1,0 +1,5 @@
+{
+  "name": "ExportPath AI",
+  "description": "An intelligent dashboard for analyzing optimum export routes, calculating landed costs, tariffs, VAT, and compliance risks using Gemini AI.",
+  "requestFramePermissions": []
+}
