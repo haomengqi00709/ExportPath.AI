@@ -55,12 +55,16 @@ const App: React.FC = () => {
       return true;
   };
 
-  // Backdoor for Demos: Type window.enableProMode() in console or click Logo 5 times
+  // Backdoor for Demos
   useEffect(() => {
       window.enableProMode = () => {
-          localStorage.setItem('exportPath_isPro', 'true');
-          alert("💎 PRO MODE ENABLED: Usage limits removed for this browser.");
-          setShowPaywall(false);
+          const secret = prompt("Enter Admin Secret:");
+          if (secret) {
+              localStorage.setItem('exportPath_isPro', 'true');
+              localStorage.setItem('exportPath_demoSecret', secret);
+              alert("💎 PRO MODE ENABLED");
+              setShowPaywall(false);
+          }
       };
   }, []);
 
@@ -70,9 +74,13 @@ const App: React.FC = () => {
       console.log(`Secret Click: ${newCount}/5`);
       
       if (newCount === 5) {
-          localStorage.setItem('exportPath_isPro', 'true');
-          alert("💎 PRO MODE ACTIVATED! Unlimited Access Unlocked.");
-          setShowPaywall(false);
+          const secret = prompt("💎 PRO MODE: Enter Admin Secret for Rate Limit Bypass:");
+          if (secret) {
+              localStorage.setItem('exportPath_isPro', 'true');
+              localStorage.setItem('exportPath_demoSecret', secret);
+              alert("🚀 UNLIMITED ACCESS GRANTED. Rate limits removed.");
+              setShowPaywall(false);
+          }
           setSecretClicks(0);
       }
   };
@@ -90,10 +98,10 @@ const App: React.FC = () => {
     requestRef.current = requestId;
 
     try {
-      // Trigger main analysis (2 API calls: Research + Synthesis)
+      // Trigger main analysis
       const result = await analyzeExportRoutes(input, language);
       
-      // Check if this request is still the active one (hasn't been cancelled)
+      // Check if this request is still the active one
       if (requestRef.current === requestId) {
           setData(result);
           setStatus(AnalysisStatus.SUCCESS);
@@ -118,8 +126,6 @@ const App: React.FC = () => {
 
   const handleRecommendationClick = (countryName: string) => {
     if (!currentInput) return;
-    
-    // Check limit again for recommendation clicks
     if (!checkUsageLimit()) return;
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -207,7 +213,7 @@ const App: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Sidebar: Controls (Hidden in Print) */}
+          {/* Left Sidebar */}
           <div className="lg:col-span-3 space-y-6 input-form-container">
             <InputForm 
               key={formKey}
@@ -247,9 +253,7 @@ const App: React.FC = () => {
             {/* PRIMARY ANALYSIS VIEW */}
             {status === AnalysisStatus.SUCCESS && data && currentInput && (
               <>
-                 {/* Competitor Analysis - Market Intelligence First */}
                  <CompetitorAnalysis data={data.marketIntelligence} language={language} />
-
                 <SingleRouteAnalysis 
                   data={data.primaryAnalysis} 
                   alternatives={data.alternatives}
@@ -259,7 +263,7 @@ const App: React.FC = () => {
               </>
             )}
 
-            {/* ALTERNATIVES SECTION (Hidden in Print) */}
+            {/* ALTERNATIVES SECTION */}
             {status === AnalysisStatus.SUCCESS && data && data.alternatives.length > 0 && (
                 <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 pt-6 border-t border-slate-800/50 no-print">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -300,7 +304,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Legal Footer (Visible on Screen & Print) */}
       <footer className="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-slate-600 border-t border-slate-800/50 mt-12 w-full">
          <p>© 2024 ExportPath AI. All rights reserved.</p>
          <p className="mt-2 text-slate-700">

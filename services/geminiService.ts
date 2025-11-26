@@ -3,7 +3,7 @@ import { DashboardData, ExportInput, ImageAnalysisResult, ProductSuggestion, Lan
 // Configuration: Point this to your Railway/Vercel URL in production
 // For local development, assume backend runs on port 8080
 const BACKEND_URL = process.env.NODE_ENV === 'production' 
-  ? "https://your-railway-app.up.railway.app" // CHANGE THIS TO YOUR REAL URL
+  ? "https://your-railway-app.up.railway.app" // CHANGE THIS TO YOUR REAL URL AFTER DEPLOYMENT
   : "http://localhost:8080";
 
 const LANGUAGE_NAMES: Record<Language, string> = {
@@ -39,6 +39,18 @@ const handleApiError = async (response: Response) => {
   return response.json();
 };
 
+// Helper to get headers with optional Demo Secret
+const getHeaders = () => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const isPro = localStorage.getItem('exportPath_isPro') === 'true';
+    const demoSecret = localStorage.getItem('exportPath_demoSecret');
+    
+    if (isPro && demoSecret) {
+        headers['x-demo-secret'] = demoSecret;
+    }
+    return headers;
+};
+
 export const analyzeProductImage = async (
   imageFile: File, 
   destinationCountry: string, 
@@ -66,7 +78,7 @@ export const analyzeProductImage = async (
 
     const data = await handleApiError(await fetch(`${BACKEND_URL}/api/analyze-image`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({
             base64Data,
             mimeType: imageFile.type,
@@ -97,7 +109,7 @@ export const suggestProductDetails = async (
 
     const data = await handleApiError(await fetch(`${BACKEND_URL}/api/suggest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({ prompt, language })
     }));
 
@@ -110,8 +122,7 @@ export const suggestProductDetails = async (
 
 export const analyzeExportRoutes = async (input: ExportInput, language: Language): Promise<DashboardData> => {
   try {
-    // Construct Prompts on Client Side (or move to backend fully)
-    // We pass these to the backend to execute
+    // Construct Prompts on Client Side
     
     const researchPrompt = `
         Act as an international trade researcher.
@@ -145,9 +156,6 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
         Return strict JSON.
     `;
 
-    // Schema definition (simplified for passing to backend config)
-    // Note: In a real app, define schema in backend to keep payload small. 
-    // Here we replicate structure for compatibility.
     const analysisConfig = {
         temperature: 0.1,
         systemInstruction: "Trade expert. Estimate prices if missing. Return JSON.",
@@ -200,13 +208,12 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
 
     const data = await handleApiError(await fetch(`${BACKEND_URL}/api/analyze-route`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({
             useSearch: input.useSearch,
             researchPrompt,
             analysisPrompt,
             analysisConfig,
-            // METADATA FOR DATABASE INDEXING (RAG)
             metadata: {
                 originCountry: input.originCountry,
                 destinationCountry: input.destinationCountry,
@@ -219,7 +226,6 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
     if (!data.text) throw new Error("No response from AI");
     
     const parsedData = JSON.parse(data.text) as DashboardData;
-    // Attach verified search sources from backend
     parsedData.searchSources = data.searchSources;
     
     return parsedData;
