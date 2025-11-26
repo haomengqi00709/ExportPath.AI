@@ -2,9 +2,10 @@ import { DashboardData, ExportInput, ImageAnalysisResult, ProductSuggestion, Lan
 
 // Configuration: Point this to your Railway/Vercel URL in production
 // For local development, assume backend runs on port 8080
-const BACKEND_URL = process.env.NODE_ENV === 'production' 
-  ? "https://your-railway-app.up.railway.app" // CHANGE THIS TO YOUR REAL URL AFTER DEPLOYMENT
-  : "http://localhost:8080";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? "https://your-railway-app.up.railway.app" // CHANGE THIS OR SET VITE_BACKEND_URL
+    : "http://localhost:8080");
 
 const LANGUAGE_NAMES: Record<Language, string> = {
   en: "English",
