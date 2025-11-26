@@ -3,7 +3,7 @@ import { MarketAnalysis, Language, ExportInput, OptimizationStrategy, SearchSour
 import { translations } from '../translations';
 import CostBreakdown from './CostBreakdown';
 import ComplianceBadge from './ComplianceBadge';
-import { Scale, Lightbulb, Ship, Landmark, BookOpen, DollarSign, Info, MousePointerClick, Globe, Link, Newspaper, CheckCircle2 } from 'lucide-react';
+import { Scale, Lightbulb, Ship, Landmark, BookOpen, DollarSign, Info, MousePointerClick, Globe, Link, Newspaper, CheckCircle2, Printer, Loader2 } from 'lucide-react';
 import StrategyModal from './StrategyModal';
 
 interface SingleRouteAnalysisProps {
@@ -18,6 +18,7 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<'tax' | 'logistics' | 'legal'>('tax');
+  const [isPrinting, setIsPrinting] = useState(false);
 
   // Client-side math to ensure total consistency
   const totalLandedCost = 
@@ -33,6 +34,30 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
   const handleStrategyClick = (section: 'tax' | 'logistics' | 'legal') => {
     setActiveSection(section);
     setIsModalOpen(true);
+  };
+  
+  const handlePrint = () => {
+      setIsPrinting(true);
+      
+      // Update title for a nice PDF filename
+      const originalTitle = document.title;
+      document.title = `ExportPath_${input.productName}_${input.destinationCountry}_Report`;
+
+      // Small timeout to allow UI update and title change
+      setTimeout(() => {
+          try {
+              window.print();
+          } catch (e) {
+              console.error("Print blocked:", e);
+              alert("Print dialog blocked by preview environment. Please press Ctrl+P (Cmd+P) manually, or deploy the app to use this feature.");
+          } finally {
+              // Reset state after a delay (assuming print dialog pauses JS in real browsers)
+              setTimeout(() => {
+                  setIsPrinting(false);
+                  document.title = originalTitle;
+              }, 1000);
+          }
+      }, 500);
   };
 
   // Helper to format percentages safely (handles 0.19 and 19 correctly)
@@ -55,7 +80,7 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
         if (hostname.includes('.gov') || 
             hostname.includes('europa.eu') || 
             hostname.includes('wto.org') || 
-            hostname.includes('un.org') ||
+            hostname.includes('un.org') || 
             hostname.includes('worldbank.org') ||
             hostname.includes('oecd.org') ||
             hostname.includes('customs') ||
@@ -83,7 +108,7 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       
       {/* Strategy Modal */}
       {data.optimizationStrategy && (
@@ -96,8 +121,25 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
           />
       )}
 
+      {/* Export / Print Button Toolbar - Top Level for Clickability */}
+      <div className="flex justify-end no-print relative z-50">
+        <button 
+            type="button"
+            onClick={handlePrint}
+            disabled={isPrinting}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white px-4 py-2 rounded-lg transition-all shadow border border-slate-700 font-medium text-xs uppercase tracking-wider group cursor-pointer disabled:opacity-70 disabled:cursor-wait"
+        >
+            {isPrinting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+                <Printer className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            )}
+            <span>{isPrinting ? "Processing..." : "Download PDF Report"}</span>
+        </button>
+      </div>
+
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
              <span className={`fi fi-${data.isoCode.toLowerCase()} text-9xl`}></span>
         </div>
@@ -139,7 +181,7 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left: Cost Visualization */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 min-h-[400px]">
            <CostBreakdown item={data} language={language} />
         </div>
 
@@ -156,7 +198,7 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
                         <div>
                           <span className="text-slate-300 font-medium flex items-center gap-1.5">
                             {t.targetWholesale}
-                            <div className="group relative">
+                            <div className="group relative no-print">
                               <Info className="w-3.5 h-3.5 text-slate-500 cursor-help" />
                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-xs text-slate-300 rounded shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 {t.wholesaleTooltip}
@@ -228,7 +270,7 @@ const SingleRouteAnalysis: React.FC<SingleRouteAnalysisProps> = ({ data, alterna
       </div>
 
       {/* Strategic Insights Cards (Clickable) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
           <button 
              onClick={() => handleStrategyClick('tax')}
              className="text-left bg-slate-900 border border-slate-800 p-5 rounded-xl hover:bg-slate-800 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/10 transition-all group relative overflow-hidden"

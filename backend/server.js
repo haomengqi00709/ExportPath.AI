@@ -1,25 +1,38 @@
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenAI } = require('@google/genai');
+const rateLimit = require('express-rate-limit');
+const { PrismaClient } = require('@prisma/client');
 require('dotenv').config();
 
 const app = express();
+const prisma = new PrismaClient();
 
-// Configure CORS to allow requests from your frontend (Vercel)
+// Configure CORS
 app.use(cors({
-    origin: '*', // For production, replace '*' with your Vercel domain
+    origin: '*', 
     methods: ['POST', 'GET', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: ['Content-Type', 'x-demo-secret']
 }));
 
-// Increase payload limit for base64 images
 app.use(express.json({ limit: '10mb' }));
+
+// SECURITY: Rate Limiting
+app.set('trust proxy', 1);
+const apiLimiter = rateLimit({
+	windowMs: 1 * 60 * 1000, 
+	limit: 20, // Increased limit slightly for testing
+	standardHeaders: 'draft-7', 
+	legacyHeaders: false,
+    skip: (req) => req.headers['x-demo-secret'] === process.env.DEMO_SECRET,
+    message: { error: "Too many requests. Please try again in a minute." }
+});
+app.use('/api', apiLimiter);
 
 const apiKey = process.env.GOOGLE_API_KEY;
 const genAI = new GoogleGenAI({ apiKey });
 const modelName = "gemini-2.5-flash";
 
-// Helper for error handling
 const handleError = (res, error) => {
     console.error("Backend Error:", error);
     const msg = error.message || "Unknown server error";
@@ -29,11 +42,10 @@ const handleError = (res, error) => {
     res.status(500).json({ error: msg });
 };
 
-// 1. Analyze Image Endpoint
+// 1. Analyze Image Endpoint (Passthrough)
 app.post('/api/analyze-image', async (req, res) => {
     try {
-        const { base64Data, mimeType, prompt, language } = req.body;
-        
+        const { base64Data, mimeType, prompt } = req.body;
         const response = await genAI.models.generateContent({
             model: modelName,
             contents: {
@@ -42,104 +54,110 @@ app.post('/api/analyze-image', async (req, res) => {
                     { text: prompt }
                 ]
             },
-            config: {
-                temperature: 0.1,
-                responseMimeType: "application/json",
-                // Note: Schema is handled by the model instruction in prompt or implicitly, 
-                // but passing the schema object from frontend config is safer if complex.
-                // For simplicity here, we assume the prompt enforces JSON.
-            }
+            config: { temperature: 0.1, responseMimeType: "application/json" }
         });
-
         res.json({ text: response.text });
-    } catch (error) {
-        handleError(res, error);
-    }
+    } catch (error) { handleError(res, error); }
 });
 
-// 2. Suggest Details Endpoint
+// 2. Suggest Details Endpoint (Passthrough)
 app.post('/api/suggest', async (req, res) => {
     try {
         const { prompt } = req.body;
-        
         const response = await genAI.models.generateContent({
             model: modelName,
             contents: prompt,
-            config: {
-                temperature: 0.1,
-                responseMimeType: "application/json"
-            }
+            config: { temperature: 0.1, responseMimeType: "application/json" }
         });
-
         res.json({ text: response.text });
-    } catch (error) {
-        handleError(res, error);
-    }
+    } catch (error) { handleError(res, error); }
 });
 
-// 3. Main Export Route Analysis Endpoint
+// 3. RAG MAIN ENDPOINT: Analyze Route
 app.post('/api/analyze-route', async (req, res) => {
     try {
-        const { useSearch, researchPrompt, analysisPrompt, analysisConfig } = req.body;
-        
+        const { useSearch, researchPrompt, analysisPrompt, analysisConfig, metadata } = req.body;
+        const { originCountry, destinationCountry, hsCode, productName } = metadata || {};
+
+        // --- STEP 1: CHECK DATABASE (The "Gold Standard") ---
+        // Only if we have valid metadata to query
+        if (originCountry && destinationCountry && hsCode) {
+            try {
+                const cachedRoute = await prisma.tradeRoute.findFirst({
+                    where: {
+                        originCountry,
+                        destCountry: destinationCountry,
+                        hsCode,
+                        status: 'VERIFIED'
+                    }
+                });
+
+                if (cachedRoute) {
+                    console.log(`💎 RAG HIT: Serving verified data for ${originCountry}->${destinationCountry} (${hsCode})`);
+                    return res.json({ 
+                        text: cachedRoute.data, 
+                        searchSources: [], // Cached data might not store sources or they are embedded
+                        source: 'DATABASE_VERIFIED' 
+                    });
+                }
+            } catch (dbError) {
+                console.warn("DB Read Error (Proceeding to Live API):", dbError.message);
+                // Graceful degradation: If DB is down, fall back to AI
+            }
+        }
+
+        // --- STEP 2: LIVE AI EXECUTION (The "Harvesting") ---
         let researchText = "";
         let searchSources = [];
 
-        // Step 1: Research (Server-side)
         if (useSearch) {
-            console.log("Starting Google Search...");
+            console.log("🔍 Starting Google Search...");
             const researchResponse = await genAI.models.generateContent({
                 model: modelName,
                 contents: researchPrompt,
-                config: {
-                    temperature: 0.1,
-                    tools: [{ googleSearch: {} }]
-                }
+                config: { temperature: 0.1, tools: [{ googleSearch: {} }] }
             });
-
             researchText = researchResponse.text || "";
-            
-            // Extract sources
             const groundingChunks = researchResponse.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
             searchSources = groundingChunks
                 .map(chunk => chunk.web ? { title: chunk.web.title, uri: chunk.web.uri } : null)
                 .filter(s => s !== null);
         } else {
-            // Standard mode fallback
             researchText = "(INTERNAL KNOWLEDGE MODE - NO SEARCH)";
         }
 
-        // Step 2: Synthesis
-        console.log("Starting Analysis...");
-        
-        // Inject the research text into the final prompt
-        // Note: The frontend sends a template, but we need to inject the actual researchText here
-        // Or simpler: The frontend sends the logic, we just execute.
-        // To keep it robust: The frontend constructs the final prompt string assuming we inject context.
-        // Let's assume the frontend sends the *full prompt* for analysis, but we need to inject the researchText.
-        
-        // BETTER APPROACH: The frontend sends specific params, backend constructs prompt.
-        // But to minimize refactoring, we will assume the frontend sent the `analysisPrompt` string 
-        // with a placeholder or we just append the context.
-        
-        // Let's reconstruct the final prompt here to be safe and secure.
-        const finalPrompt = `
-            RESEARCH CONTEXT:
-            ${researchText}
-
-            ${analysisPrompt} 
-        `;
-
+        console.log("🧠 Starting Synthesis...");
+        const finalPrompt = `RESEARCH CONTEXT:\n${researchText}\n\n${analysisPrompt}`;
         const synthesisResponse = await genAI.models.generateContent({
             model: modelName,
             contents: finalPrompt,
-            config: analysisConfig // Schema passed from frontend
+            config: analysisConfig
         });
 
-        res.json({ 
-            text: synthesisResponse.text, 
-            searchSources: searchSources 
-        });
+        const resultText = synthesisResponse.text;
+
+        // --- STEP 3: SAVE TO DATABASE (The "Pending Queue") ---
+        if (originCountry && destinationCountry && hsCode && resultText) {
+            try {
+                // Save asynchronously (fire and forget) so user doesn't wait
+                prisma.analysisLog.create({
+                    data: {
+                        originCountry,
+                        destCountry: destinationCountry,
+                        hsCode,
+                        productName: productName || 'Unknown',
+                        aiResult: resultText,
+                        searchSources: JSON.stringify(searchSources),
+                        status: 'PENDING'
+                    }
+                }).then(() => console.log("📝 Log saved to DB as PENDING"))
+                  .catch(e => console.error("Failed to save log:", e.message));
+            } catch (e) {
+                // Ignore save errors
+            }
+        }
+
+        res.json({ text: resultText, searchSources, source: 'LIVE_AI' });
 
     } catch (error) {
         handleError(res, error);

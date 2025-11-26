@@ -1,12 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import InputForm from './components/InputForm';
 import SingleRouteAnalysis from './components/SingleRouteAnalysis';
 import CompetitorAnalysis from './components/CompetitorAnalysis';
 import { ExportInput, DashboardData, AnalysisStatus, ImageAnalysisResult, Language } from './types';
-import { translations } from './translations';
+import { translations } from '../translations';
 import { analyzeExportRoutes } from './services/geminiService';
-import { Ship, LayoutDashboard, AlertTriangle, ArrowRight, Sparkles, Globe } from 'lucide-react';
+import { Ship, LayoutDashboard, AlertTriangle, ArrowRight, Sparkles, Globe, Crown, Lock } from 'lucide-react';
 import ComplianceBadge from './components/ComplianceBadge';
+
+declare global {
+  interface Window {
+    enableProMode: () => void;
+  }
+}
 
 const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>('en');
@@ -17,20 +23,69 @@ const App: React.FC = () => {
   const [formKey, setFormKey] = useState(0); 
   
   const [imageIdentified, setImageIdentified] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [secretClicks, setSecretClicks] = useState(0);
   
   // Track the current active request ID to handle cancellation
   const requestRef = useRef<number>(0);
 
   const t = translations[language];
 
+  // FREEMIUM LOGIC
+  const checkUsageLimit = () => {
+      const isPro = localStorage.getItem('exportPath_isPro') === 'true';
+      if (isPro) return true;
+
+      const today = new Date().toISOString().split('T')[0];
+      const lastUsageDate = localStorage.getItem('exportPath_date');
+      let count = parseInt(localStorage.getItem('exportPath_count') || '0');
+
+      if (lastUsageDate !== today) {
+          // Reset for new day
+          count = 0;
+          localStorage.setItem('exportPath_date', today);
+      }
+
+      if (count >= 3) {
+          setShowPaywall(true);
+          return false;
+      }
+
+      localStorage.setItem('exportPath_count', (count + 1).toString());
+      return true;
+  };
+
+  // Backdoor for Demos: Type window.enableProMode() in console or click Logo 5 times
+  useEffect(() => {
+      window.enableProMode = () => {
+          localStorage.setItem('exportPath_isPro', 'true');
+          alert("💎 PRO MODE ENABLED: Usage limits removed for this browser.");
+          setShowPaywall(false);
+      };
+  }, []);
+
+  const handleSecretClick = () => {
+      const newCount = secretClicks + 1;
+      setSecretClicks(newCount);
+      console.log(`Secret Click: ${newCount}/5`);
+      
+      if (newCount === 5) {
+          localStorage.setItem('exportPath_isPro', 'true');
+          alert("💎 PRO MODE ACTIVATED! Unlimited Access Unlocked.");
+          setShowPaywall(false);
+          setSecretClicks(0);
+      }
+  };
+
   const handleAnalysis = async (input: ExportInput) => {
+    // Check limit before starting
+    if (!checkUsageLimit()) return;
+
     setStatus(AnalysisStatus.LOADING);
     setError(null);
     setCurrentInput(input);
+    setData(null); // Clear previous data to prevent chart errors
     
-    // Increment request ID. 
-    // If handleCancel is called, status goes IDLE. 
-    // If a promise returns later, we check if requestId matches current before updating state.
     const requestId = Date.now();
     requestRef.current = requestId;
 
@@ -43,10 +98,6 @@ const App: React.FC = () => {
           setData(result);
           setStatus(AnalysisStatus.SUCCESS);
       }
-
-      // NOTE: Removed generateOptimizationStrategy call here to save API quota.
-      // It is now lazy-loaded inside SingleRouteAnalysis when the user clicks a card.
-
     } catch (e: any) {
       if (requestRef.current === requestId) {
           console.error(e);
@@ -57,10 +108,8 @@ const App: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Invalidate the current request ID so any pending promises are ignored
     requestRef.current = 0;
     setStatus(AnalysisStatus.IDLE);
-    // Optional: Keep currentInput to allow user to edit, or clear it. Keeping it is better UX.
   };
 
   const handleImageAnalysisResult = (result: ImageAnalysisResult) => {
@@ -70,6 +119,9 @@ const App: React.FC = () => {
   const handleRecommendationClick = (countryName: string) => {
     if (!currentInput) return;
     
+    // Check limit again for recommendation clicks
+    if (!checkUsageLimit()) return;
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const newInput = { ...currentInput, destinationCountry: countryName };
     setCurrentInput(newInput);
@@ -77,12 +129,41 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-emerald-500/30 flex flex-col">
+      
+      {/* Paywall Modal */}
+      {showPaywall && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+              <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-purple-500 to-emerald-500"></div>
+                  <div className="bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Lock className="w-8 h-8 text-amber-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Free Limit Reached</h2>
+                  <p className="text-slate-400 mb-8">
+                      You've used your 3 free analysis credits for today. Upgrade to Pro for unlimited Deep Search analysis and PDF exports.
+                  </p>
+                  <button className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 transition-all transform hover:scale-[1.02]">
+                      Upgrade to Pro - $29/mo
+                  </button>
+                  <button 
+                    onClick={() => setShowPaywall(false)}
+                    className="mt-4 text-sm text-slate-500 hover:text-slate-300 underline"
+                  >
+                      Close Preview
+                  </button>
+                  <div className="mt-6 text-xs text-slate-600">
+                      Demo User? Contact sales for an unlock key.
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-emerald-600 p-2 rounded-lg">
+          <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={handleSecretClick}>
+            <div className="bg-emerald-600 p-2 rounded-lg group-active:scale-95 transition-transform">
               <Ship className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
@@ -123,11 +204,11 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Sidebar: Controls */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Left Sidebar: Controls (Hidden in Print) */}
+          <div className="lg:col-span-3 space-y-6 input-form-container">
             <InputForm 
               key={formKey}
               language={language}
@@ -174,14 +255,13 @@ const App: React.FC = () => {
                   alternatives={data.alternatives}
                   input={currentInput}
                   language={language}
-                  // No preloadedStrategy anymore, it will fetch on click
                 />
               </>
             )}
 
-            {/* ALTERNATIVES SECTION (The Garnish) */}
+            {/* ALTERNATIVES SECTION (Hidden in Print) */}
             {status === AnalysisStatus.SUCCESS && data && data.alternatives.length > 0 && (
-                <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 pt-6 border-t border-slate-800/50">
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 pt-6 border-t border-slate-800/50 no-print">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-purple-400" />
                         {t.results.otherMarkets}
@@ -219,6 +299,16 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Legal Footer (Visible on Screen & Print) */}
+      <footer className="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-slate-600 border-t border-slate-800/50 mt-12 w-full">
+         <p>© 2024 ExportPath AI. All rights reserved.</p>
+         <p className="mt-2 text-slate-700">
+            Disclaimer: This tool provides AI-generated estimates for informational purposes only. 
+            It does not constitute professional legal, tax, or logistics advice. 
+            Please verify all rates and regulations with licensed customs brokers.
+         </p>
+      </footer>
     </div>
   );
 };
