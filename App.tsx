@@ -3,7 +3,7 @@ import InputForm from './components/InputForm';
 import SingleRouteAnalysis from './components/SingleRouteAnalysis';
 import CompetitorAnalysis from './components/CompetitorAnalysis';
 import { ExportInput, DashboardData, AnalysisStatus, ImageAnalysisResult, Language } from './types';
-import { translations } from '../translations';
+import { translations } from './translations';
 import { analyzeExportRoutes } from './services/geminiService';
 import { Ship, LayoutDashboard, AlertTriangle, ArrowRight, Sparkles, Globe, Crown, Lock } from 'lucide-react';
 import ComplianceBadge from './components/ComplianceBadge';
@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [imageIdentified, setImageIdentified] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
+  const [showContactModal, setShowContactModal] = useState(false);
   
   // Track the current active request ID to handle cancellation
   const requestRef = useRef<number>(0);
@@ -136,7 +137,44 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-emerald-500/30 flex flex-col">
-      
+
+      {/* Contact Modal */}
+      {showContactModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowContactModal(false)}>
+              <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500"></div>
+                  <div className="bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Ship className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Get in Touch</h2>
+                  <p className="text-emerald-400 font-semibold text-lg mb-6">Jason Hao</p>
+
+                  <div className="bg-slate-950 rounded-lg p-4 mb-6 border border-slate-800">
+                      <p className="text-xs text-slate-500 mb-2">Email</p>
+                      <div className="flex items-center justify-between gap-2">
+                          <code className="text-sm text-slate-300 break-all">haomengqi12138@gmail.com</code>
+                          <button
+                              onClick={() => {
+                                  navigator.clipboard.writeText('haomengqi12138@gmail.com');
+                                  alert('Email copied to clipboard!');
+                              }}
+                              className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-xs transition-colors whitespace-nowrap"
+                          >
+                              Copy
+                          </button>
+                      </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowContactModal(false)}
+                    className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-xl transition-colors"
+                  >
+                      Close
+                  </button>
+              </div>
+          </div>
+      )}
+
       {/* Paywall Modal */}
       {showPaywall && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
@@ -181,6 +219,17 @@ const App: React.FC = () => {
                 <Sparkles className="w-3 h-3 text-emerald-500" />
                 {t.subtitle}
             </div>
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                <span className="text-xs text-slate-400">Created by</span>
+                <span className="text-sm font-semibold text-emerald-400">Jason Hao</span>
+                <span className="text-slate-600">•</span>
+                <button
+                    onClick={() => setShowContactModal(true)}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors hover:underline"
+                >
+                    Contact
+                </button>
+            </div>
             <div className="relative group h-full flex items-center">
                 <div className="absolute top-full pt-2 w-full h-4 bg-transparent"></div> {/* Bridge gap */}
                 <button className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors py-2">
@@ -189,16 +238,16 @@ const App: React.FC = () => {
                 </button>
                 <div className="absolute right-0 top-full pt-2 w-32 hidden group-hover:block z-50">
                     <div className="bg-slate-900 border border-slate-800 rounded-lg shadow-xl overflow-hidden">
-                        {(['en', 'zh', 'tw', 'fr', 'de', 'es'] as Language[]).map(lang => (
+                        {(['en', 'fr', 'zh', 'tw', 'de', 'es'] as Language[]).map(lang => (
                             <button
                                 key={lang}
                                 onClick={() => setLanguage(lang)}
                                 className={`block w-full text-left px-4 py-2 text-sm hover:bg-slate-800 transition-colors ${language === lang ? 'text-emerald-400 bg-slate-800' : 'text-slate-400'}`}
                             >
                                 {lang === 'en' && 'English'}
+                                {lang === 'fr' && 'Français'}
                                 {lang === 'zh' && '中文 (简体)'}
                                 {lang === 'tw' && '繁體中文'}
-                                {lang === 'fr' && 'Français'}
                                 {lang === 'de' && 'Deutsch'}
                                 {lang === 'es' && 'Español'}
                             </button>
@@ -214,7 +263,7 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left Sidebar */}
-          <div className="lg:col-span-3 space-y-6 input-form-container">
+          <div className="lg:col-span-4 space-y-6 input-form-container">
             <InputForm 
               key={formKey}
               language={language}
@@ -234,7 +283,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-9 space-y-6">
+          <div className="lg:col-span-8 space-y-6">
             
             {status === AnalysisStatus.ERROR && (
                <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl flex items-center gap-3 animate-in fade-in">
@@ -305,7 +354,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-slate-600 border-t border-slate-800/50 mt-12 w-full">
-         <p>© 2024 ExportPath AI. All rights reserved.</p>
+         <p>© 2024 Pocket TC. All rights reserved.</p>
          <p className="mt-2 text-slate-700">
             Disclaimer: This tool provides AI-generated estimates for informational purposes only. 
             It does not constitute professional legal, tax, or logistics advice. 

@@ -2,11 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const { GoogleGenAI } = require('@google/genai');
 const rateLimit = require('express-rate-limit');
-const { PrismaClient } = require('@prisma/client');
+// const { PrismaClient } = require('@prisma/client'); // Commented out for local testing without DB
 require('dotenv').config();
 
 const app = express();
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient(); // Commented out for local testing without DB
 
 // Configure CORS
 app.use(cors({
@@ -42,10 +42,23 @@ const handleError = (res, error) => {
     res.status(500).json({ error: msg });
 };
 
-// 1. Analyze Image Endpoint (Passthrough)
+// 1. Analyze Image Endpoint (with proper schema)
 app.post('/api/analyze-image', async (req, res) => {
     try {
         const { base64Data, mimeType, prompt } = req.body;
+
+        const schema = {
+            type: 'OBJECT',
+            properties: {
+                detectedName: { type: 'STRING', description: 'Product name identified from image' },
+                hsCode: { type: 'STRING', description: '6-digit HS Code' },
+                hsCodeDescription: { type: 'STRING', description: 'Official short description of HS Code' },
+                unit: { type: 'STRING', description: 'Standard trading unit (e.g., pcs, kg, set)' },
+                visualDescription: { type: 'STRING', description: 'Detailed product description from image' }
+            },
+            required: ['detectedName', 'hsCode', 'hsCodeDescription', 'unit', 'visualDescription']
+        };
+
         const response = await genAI.models.generateContent({
             model: modelName,
             contents: {
@@ -54,20 +67,41 @@ app.post('/api/analyze-image', async (req, res) => {
                     { text: prompt }
                 ]
             },
-            config: { temperature: 0.1, responseMimeType: "application/json" }
+            config: {
+                temperature: 0.1,
+                responseMimeType: "application/json",
+                responseSchema: schema
+            }
         });
         res.json({ text: response.text });
     } catch (error) { handleError(res, error); }
 });
 
-// 2. Suggest Details Endpoint (Passthrough)
+// 2. Suggest Details Endpoint (with proper schema)
 app.post('/api/suggest', async (req, res) => {
     try {
         const { prompt } = req.body;
+
+        const schema = {
+            type: 'OBJECT',
+            properties: {
+                hsCode: { type: 'STRING', description: '6-digit HS Code' },
+                hsCodeDescription: { type: 'STRING', description: 'Official short description of HS Code' },
+                estimatedBaseCost: { type: 'NUMBER', description: 'Estimated base cost in specified currency' },
+                unit: { type: 'STRING', description: 'Standard trading unit (e.g., pcs, kg, set)' },
+                description: { type: 'STRING', description: 'Product description' }
+            },
+            required: ['hsCode', 'hsCodeDescription', 'estimatedBaseCost', 'unit', 'description']
+        };
+
         const response = await genAI.models.generateContent({
             model: modelName,
             contents: prompt,
-            config: { temperature: 0.1, responseMimeType: "application/json" }
+            config: {
+                temperature: 0.1,
+                responseMimeType: "application/json",
+                responseSchema: schema
+            }
         });
         res.json({ text: response.text });
     } catch (error) { handleError(res, error); }
@@ -80,7 +114,8 @@ app.post('/api/analyze-route', async (req, res) => {
         const { originCountry, destinationCountry, hsCode, productName } = metadata || {};
 
         // --- STEP 1: CHECK DATABASE (The "Gold Standard") ---
-        // Only if we have valid metadata to query
+        // Temporarily disabled for local testing without database
+        /*
         if (originCountry && destinationCountry && hsCode) {
             try {
                 const cachedRoute = await prisma.tradeRoute.findFirst({
@@ -94,17 +129,17 @@ app.post('/api/analyze-route', async (req, res) => {
 
                 if (cachedRoute) {
                     console.log(`💎 RAG HIT: Serving verified data for ${originCountry}->${destinationCountry} (${hsCode})`);
-                    return res.json({ 
-                        text: cachedRoute.data, 
-                        searchSources: [], // Cached data might not store sources or they are embedded
-                        source: 'DATABASE_VERIFIED' 
+                    return res.json({
+                        text: cachedRoute.data,
+                        searchSources: [],
+                        source: 'DATABASE_VERIFIED'
                     });
                 }
             } catch (dbError) {
                 console.warn("DB Read Error (Proceeding to Live API):", dbError.message);
-                // Graceful degradation: If DB is down, fall back to AI
             }
         }
+        */
 
         // --- STEP 2: LIVE AI EXECUTION (The "Harvesting") ---
         let researchText = "";
@@ -137,9 +172,10 @@ app.post('/api/analyze-route', async (req, res) => {
         const resultText = synthesisResponse.text;
 
         // --- STEP 3: SAVE TO DATABASE (The "Pending Queue") ---
+        // Temporarily disabled for local testing without database
+        /*
         if (originCountry && destinationCountry && hsCode && resultText) {
             try {
-                // Save asynchronously (fire and forget) so user doesn't wait
                 prisma.analysisLog.create({
                     data: {
                         originCountry,
@@ -156,6 +192,7 @@ app.post('/api/analyze-route', async (req, res) => {
                 // Ignore save errors
             }
         }
+        */
 
         res.json({ text: resultText, searchSources, source: 'LIVE_AI' });
 

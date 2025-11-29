@@ -1,22 +1,17 @@
 {
-  "name": "export-path-backend",
+  "name": "pocket-tc-backend",
   "version": "1.0.0",
-  "description": "Backend proxy for ExportPath AI with RAG database support",
+  "description": "Backend proxy for Pocket TC with RAG database support",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "prisma generate"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "@google/genai": "^0.1.1",
-    "express-rate-limit": "^7.1.5",
-    "@prisma/client": "^5.10.2"
-  },
-  "devDependencies": {
-    "prisma": "^5.10.2"
+    "@google/genai": "^1.30.0",
+    "express-rate-limit": "^7.1.5"
   },
   "engines": {
     "node": ">=18.0.0"

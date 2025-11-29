@@ -3,7 +3,7 @@ export type Language = 'en' | 'zh' | 'tw' | 'fr' | 'de' | 'es';
 
 export const translations = {
   en: {
-    appTitle: "ExportPath AI",
+    appTitle: "Pocket TC",
     subtitle: "Strategic Route Analysis",
     input: {
       title: "Configuration",
@@ -72,7 +72,9 @@ export const translations = {
       regulatoryLandscape: "Regulatory Landscape",
       riskAssessment: "Risk Assessment",
       barriersCerts: "Barriers & Certifications",
-      agreementsPolitics: "Trade Agreements & Politics"
+      agreementsPolitics: "Trade Agreements & Politics",
+      downloadPdf: "Download PDF Report",
+      preparingPdf: "Preparing PDF..."
     },
     costBreakdown: {
       title: "Cost Structure",
@@ -101,7 +103,7 @@ export const translations = {
     }
   },
   zh: {
-    appTitle: "ExportPath AI",
+    appTitle: "Pocket TC",
     subtitle: "出口路径战略分析",
     input: {
       title: "配置参数",
@@ -170,7 +172,9 @@ export const translations = {
       regulatoryLandscape: "监管环境",
       riskAssessment: "风险评估",
       barriersCerts: "壁垒与认证",
-      agreementsPolitics: "贸易协定与政治"
+      agreementsPolitics: "贸易协定与政治",
+      downloadPdf: "下载PDF报告",
+      preparingPdf: "准备PDF中..."
     },
     costBreakdown: {
       title: "成本结构",
@@ -199,7 +203,7 @@ export const translations = {
     }
   },
   tw: {
-    appTitle: "ExportPath AI",
+    appTitle: "Pocket TC",
     subtitle: "出口路徑戰略分析",
     input: {
       title: "配置參數",
@@ -268,7 +272,9 @@ export const translations = {
       regulatoryLandscape: "監管環境",
       riskAssessment: "風險評估",
       barriersCerts: "壁壘與認證",
-      agreementsPolitics: "貿易協定與政治"
+      agreementsPolitics: "貿易協定與政治",
+      downloadPdf: "下載PDF報告",
+      preparingPdf: "準備PDF中..."
     },
     costBreakdown: {
       title: "成本結構",
@@ -297,7 +303,7 @@ export const translations = {
     }
   },
   fr: {
-    appTitle: "ExportPath AI",
+    appTitle: "Pocket TC",
     subtitle: "Analyse Stratégique des Routes",
     input: {
       title: "Configuration",
@@ -366,7 +372,9 @@ export const translations = {
       regulatoryLandscape: "Paysage Réglementaire",
       riskAssessment: "Évaluation des Risques",
       barriersCerts: "Barrières & Certifications",
-      agreementsPolitics: "Accords Commerciaux & Politique"
+      agreementsPolitics: "Accords Commerciaux & Politique",
+      downloadPdf: "Télécharger le Rapport PDF",
+      preparingPdf: "Préparation du PDF..."
     },
     costBreakdown: {
       title: "Structure des Coûts",
@@ -395,7 +403,7 @@ export const translations = {
     }
   },
   de: {
-    appTitle: "ExportPath AI",
+    appTitle: "Pocket TC",
     subtitle: "Strategische Routenanalyse",
     input: {
       title: "Konfiguration",
@@ -464,7 +472,9 @@ export const translations = {
       regulatoryLandscape: "Regulatorisches Umfeld",
       riskAssessment: "Risikobewertung",
       barriersCerts: "Barrieren & Zertifizierungen",
-      agreementsPolitics: "Handelsabkommen & Politik"
+      agreementsPolitics: "Handelsabkommen & Politik",
+      downloadPdf: "PDF-Bericht Herunterladen",
+      preparingPdf: "PDF wird vorbereitet..."
     },
     costBreakdown: {
       title: "Kostenstruktur",
@@ -493,7 +503,7 @@ export const translations = {
     }
   },
   es: {
-    appTitle: "ExportPath AI",
+    appTitle: "Pocket TC",
     subtitle: "Análisis Estratégico de Rutas",
     input: {
       title: "Configuración",
@@ -562,7 +572,9 @@ export const translations = {
       regulatoryLandscape: "Panorama Regulatorio",
       riskAssessment: "Evaluación de Riesgos",
       barriersCerts: "Barreras y Certificaciones",
-      agreementsPolitics: "Acuerdos Comerciales y Política"
+      agreementsPolitics: "Acuerdos Comerciales y Política",
+      downloadPdf: "Descargar Informe PDF",
+      preparingPdf: "Preparando PDF..."
     },
     costBreakdown: {
       title: "Estructura de Costos",

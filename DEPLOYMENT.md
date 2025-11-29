@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide walks you through deploying ExportPath AI with the backend on Railway and the frontend on Vercel.
+This guide walks you through deploying Pocket TC with the backend on Railway and the frontend on Vercel.
 
 ## Overview
 
@@ -63,7 +63,7 @@ PORT=8080
 
 1. Click **"Deploy"**
 2. Wait for build to complete
-3. Copy your Railway backend URL (e.g., `https://exportpath-backend-production.up.railway.app`)
+3. Copy your Railway backend URL (e.g., `https://pocket-tc-backend-production.up.railway.app`)
 
 ### Step 7: Test Backend
 
@@ -129,7 +129,7 @@ Note: You can also add `GEMINI_API_KEY` if you want to use client-side API calls
 
 1. Click **"Deploy"**
 2. Wait for build to complete (usually 1-2 minutes)
-3. Vercel will give you a production URL (e.g., `https://exportpath-ai.vercel.app`)
+3. Vercel will give you a production URL (e.g., `https://pocket-tc.vercel.app`)
 
 ### Step 6: Test Production
 
@@ -146,12 +146,12 @@ Note: You can also add `GEMINI_API_KEY` if you want to use client-side API calls
 
 **Vercel:**
 1. Go to Project Settings → Domains
-2. Add your custom domain (e.g., `exportpath.ai`)
+2. Add your custom domain (e.g., `pocket-tc.ai`)
 3. Update DNS records as instructed
 
 **Railway:**
 1. Go to Service Settings → Networking
-2. Add custom domain for API (e.g., `api.exportpath.ai`)
+2. Add custom domain for API (e.g., `api.pocket-tc.ai`)
 3. Update `VITE_BACKEND_URL` in Vercel to use custom domain
 
 ### Update CORS Settings (If Using Custom Domain)
@@ -159,7 +159,7 @@ Note: You can also add `GEMINI_API_KEY` if you want to use client-side API calls
 Edit `backend/server.js`:
 ```javascript
 app.use(cors({
-    origin: ['https://your-domain.com', 'https://exportpath-ai.vercel.app'],
+    origin: ['https://your-domain.com', 'https://pocket-tc.vercel.app'],
     methods: ['POST', 'GET', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'x-demo-secret']
 }));

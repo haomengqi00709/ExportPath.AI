@@ -155,6 +155,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
     hsCodeDescription: 'Cycles fitted with auxiliary electric motor',
     unit: 'set',
     productNotes: '',
+    benchmarkPrice: undefined,
     useSearch: true // Default to deep search
   });
   
@@ -202,7 +203,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
         setFormState(prev => ({
           ...prev,
           hsCode: value,
-          hsCodeDescription: undefined 
+          hsCodeDescription: ''
         }));
     } else {
         setFormState(prev => ({
@@ -220,6 +221,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log("📸 Image upload started:", file.name);
     setError(null);
 
     const reader = new FileReader();
@@ -228,8 +230,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
 
     setIsAnalyzingImage(true);
     try {
+        console.log("🔍 Calling analyzeProductImage API...");
         const result = await analyzeProductImage(file, formState.destinationCountry, formState.currency, language);
-        
+        console.log("✅ Image analysis result:", result);
+
         setFormState(prev => ({
             ...prev,
             productName: result.detectedName,
@@ -237,10 +241,10 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
             hsCodeDescription: result.hsCodeDescription,
             unit: result.unit || prev.unit,
         }));
-        setIsHsEditable(false); 
+        setIsHsEditable(false);
         onImageAnalyzed(result);
     } catch (error: any) {
-        console.error("Image analysis failed", error);
+        console.error("❌ Image analysis failed:", error);
         setError(error.message || "Image analysis failed");
     } finally {
         setIsAnalyzingImage(false);
@@ -249,10 +253,13 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
 
   const handleSuggestDetails = async () => {
     if (!formState.productName) return;
+    console.log("✨ Magic wand clicked for:", formState.productName);
     setIsSuggesting(true);
     setError(null);
     try {
+        console.log("🔍 Calling suggestProductDetails API...");
         const suggestion = await suggestProductDetails(formState.productName, formState.currency, language);
+        console.log("✅ Suggestion result:", suggestion);
         setFormState(prev => ({
             ...prev,
             hsCode: suggestion.hsCode,
@@ -262,7 +269,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
         }));
         setIsHsEditable(false);
     } catch (error: any) {
-        console.error("Suggestion failed", error);
+        console.error("❌ Suggestion failed:", error);
         setError(error.message || "Auto-fill failed");
     } finally {
         setIsSuggesting(false);
@@ -353,7 +360,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
                     <input
                         type="text"
                         name="productName"
-                        value={formState.productName}
+                        value={formState.productName || ''}
                         onChange={handleChange}
                         className="w-full bg-slate-900 border border-slate-700 rounded-lg h-10 pl-3 pr-10 text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
                         required

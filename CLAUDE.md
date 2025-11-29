@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ExportPath AI is an international trade route analysis tool that uses Google's Gemini AI to provide export feasibility analysis. It analyzes product exports between countries, calculating costs (tariffs, VAT, shipping, compliance), profit margins, competitor pricing, and provides optimization strategies.
+Pocket TC (Pocket Trade Commissioner) is an international trade route analysis tool that uses Google's Gemini AI to provide export feasibility analysis. It analyzes product exports between countries, calculating costs (tariffs, VAT, shipping, compliance), profit margins, competitor pricing, and provides optimization strategies.
 
 **Stack:**
 - Frontend: React 19 + TypeScript + Vite
