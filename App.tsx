@@ -181,23 +181,30 @@ const App: React.FC = () => {
               <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-purple-500 to-emerald-500"></div>
                   <div className="bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Lock className="w-8 h-8 text-amber-400" />
+                      <Sparkles className="w-8 h-8 text-emerald-400" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Free Limit Reached</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">Ready for More?</h2>
                   <p className="text-slate-400 mb-8">
-                      You've used your 3 free analysis credits for today. Upgrade to Pro for unlimited Deep Search analysis and PDF exports.
+                      You've used your 3 free analyses today. Interested in unlimited access, custom reports, or API integration? Let's chat!
                   </p>
-                  <button className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 transition-all transform hover:scale-[1.02]">
-                      Upgrade to Pro - $29/mo
+                  <button
+                    onClick={() => {
+                        setShowPaywall(false);
+                        setShowContactModal(true);
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-all transform hover:scale-[1.02]"
+                  >
+                      Talk to Jason
                   </button>
-                  <button 
+                  <button
                     onClick={() => setShowPaywall(false)}
                     className="mt-4 text-sm text-slate-500 hover:text-slate-300 underline"
                   >
-                      Close Preview
+                      Close
                   </button>
-                  <div className="mt-6 text-xs text-slate-600">
-                      Demo User? Contact sales for an unlock key.
+                  <div className="mt-6 text-xs text-slate-500 leading-relaxed">
+                      haomengqi12138@gmail.com<br/>
+                      Available for demos, partnerships, and custom solutions
                   </div>
               </div>
           </div>
@@ -313,7 +320,7 @@ const App: React.FC = () => {
             )}
 
             {/* ALTERNATIVES SECTION */}
-            {status === AnalysisStatus.SUCCESS && data && data.alternatives.length > 0 && (
+            {status === AnalysisStatus.SUCCESS && data && data.alternatives && data.alternatives.length > 0 && (
                 <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 pt-6 border-t border-slate-800/50 no-print">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-purple-400" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ExportInput, ImageAnalysisResult, Language } from '../types';
 import { translations } from '../translations';
-import { Package, Globe, MapPin, Camera, Loader2, Sparkles, X, Wand2, StickyNote, Pencil, ChevronDown, Check, StopCircle, Zap, Globe2, HelpCircle } from 'lucide-react';
+import { Package, Globe, MapPin, Camera, Loader2, Sparkles, X, Wand2, StickyNote, Pencil, ChevronDown, Check, StopCircle, Zap, Globe2, HelpCircle, AlertTriangle } from 'lucide-react';
 import { analyzeProductImage, suggestProductDetails } from '../services/geminiService';
 
 interface InputFormProps {
@@ -149,7 +149,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
     productName: 'Electric Bicycle',
     originCountry: 'China',
     destinationCountry: 'Germany',
-    baseCost: 450,
+    baseCost: 0,  // Start blank - user must enter their cost
     currency: 'USD',
     hsCode: '8711.60',
     hsCodeDescription: 'Cycles fitted with auxiliary electric motor',
@@ -284,6 +284,13 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validation: Ensure cost is filled
+    if (!formState.baseCost || formState.baseCost <= 0) {
+      setError(t.costRequired || "Please enter the product cost before analyzing.");
+      return;
+    }
+
     onSubmit(formState);
   };
 
@@ -525,6 +532,14 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
                 />
             </button>
         </div>
+
+        {/* Error Display */}
+        {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg text-sm flex items-center gap-2 mt-4">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>{error}</span>
+            </div>
+        )}
 
         {/* Analyze / Cancel Button Group */}
         {isLoading ? (

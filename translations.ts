@@ -29,7 +29,8 @@ export const translations = {
       searchMode: "Analysis Mode",
       standardMode: "Standard (Internal Knowledge)",
       deepMode: "Deep Search (Live Data)",
-      searchTooltip: "Deep Search browses the web for real-time 2024/25 data. Standard is faster but uses estimated data."
+      searchTooltip: "Deep Search browses the web for real-time 2024/25 data. Standard is faster but uses estimated data.",
+      costRequired: "⚠️ Please enter the product cost before analyzing."
     },
     results: {
       selectPrompt: "Select an Origin and Destination (or upload a photo) to begin.",
@@ -129,7 +130,8 @@ export const translations = {
       searchMode: "分析模式",
       standardMode: "标准模式 (内部知识库)",
       deepMode: "深度搜索 (实时数据)",
-      searchTooltip: "深度搜索会联网查找实时 2024/25 数据。标准模式速度更快但使用估算数据。"
+      searchTooltip: "深度搜索会联网查找实时 2024/25 数据。标准模式速度更快但使用估算数据。",
+      costRequired: "⚠️ 请先输入产品成本再进行分析。"
     },
     results: {
       selectPrompt: "选择原产国和目的国（或上传照片）以开始。",
@@ -229,7 +231,8 @@ export const translations = {
       searchMode: "分析模式",
       standardMode: "標準模式 (內部知識庫)",
       deepMode: "深度搜索 (實時數據)",
-      searchTooltip: "深度搜索會聯網查找實時 2024/25 數據。標準模式速度更快但使用估算數據。"
+      searchTooltip: "深度搜索會聯網查找實時 2024/25 數據。標準模式速度更快但使用估算數據。",
+      costRequired: "⚠️ 請先輸入產品成本再進行分析。"
     },
     results: {
       selectPrompt: "選擇原產國和目的國（或上傳照片）以開始。",
@@ -329,7 +332,8 @@ export const translations = {
       searchMode: "Mode d'analyse",
       standardMode: "Standard (Connaissances internes)",
       deepMode: "Recherche approfondie (Données en direct)",
-      searchTooltip: "La recherche approfondie navigue sur le Web pour des données en temps réel 2024/25. La norme est plus rapide mais utilise des données estimées."
+      searchTooltip: "La recherche approfondie navigue sur le Web pour des données en temps réel 2024/25. La norme est plus rapide mais utilise des données estimées.",
+      costRequired: "⚠️ Veuillez saisir le coût du produit avant d'analyser."
     },
     results: {
       selectPrompt: "Sélectionnez une origine et une destination pour commencer.",
@@ -429,7 +433,8 @@ export const translations = {
       searchMode: "Analysemodus",
       standardMode: "Standard (Internes Wissen)",
       deepMode: "Deep Search (Live-Daten)",
-      searchTooltip: "Deep Search durchsucht das Internet nach Echtzeitdaten für 2024/25. Standard ist schneller, verwendet aber geschätzte Daten."
+      searchTooltip: "Deep Search durchsucht das Internet nach Echtzeitdaten für 2024/25. Standard ist schneller, verwendet aber geschätzte Daten.",
+      costRequired: "⚠️ Bitte geben Sie die Produktkosten ein, bevor Sie analysieren."
     },
     results: {
       selectPrompt: "Wählen Sie Herkunft und Ziel (oder Foto hochladen) um zu beginnen.",
@@ -529,7 +534,8 @@ export const translations = {
       searchMode: "Modo de Análisis",
       standardMode: "Estándar (Conocimiento Interno)",
       deepMode: "Búsqueda Profunda (Datos en Vivo)",
-      searchTooltip: "La búsqueda profunda navega por la web para obtener datos en tiempo real de 2024/25. El estándar es más rápido pero utiliza datos estimados."
+      searchTooltip: "La búsqueda profunda navega por la web para obtener datos en tiempo real de 2024/25. El estándar es más rápido pero utiliza datos estimados.",
+      costRequired: "⚠️ Por favor ingrese el costo del producto antes de analizar."
     },
     results: {
       selectPrompt: "Seleccione Origen y Destino para comenzar.",

@@ -127,15 +127,22 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
     
     const researchPrompt = `
         Act as an international trade researcher.
-        Find SPECIFIC 2024-2025 import duty data for "${input.productName}" (HS Code: ${input.hsCode}) 
+        Find SPECIFIC 2024-2025 import duty data for "${input.productName}" (HS Code: ${input.hsCode})
         from ${input.originCountry} to ${input.destinationCountry}.
-        
+
         Instructions:
         1. Search "Third Country Duty" / "MFN Tariff".
         2. Search "Anti-Dumping Duties" (AD) or "Section 301" for ${input.originCountry}.
         3. Search Non-Tariff Barriers (MPF, HMF, VAT).
-        4. Search 3 Competitor Prices in ${input.destinationCountry}.
-        
+        4. Search for 3 similar competing products in ${input.destinationCountry}.
+           For each product found, capture and preserve:
+           - Product name
+           - Price
+           - Key features
+           - The EXACT product listing URL from the search result (e.g., Amazon, eBay, Alibaba, local retailers)
+
+           IMPORTANT: Only include real e-commerce product URLs. Do not fabricate or guess URLs.
+
         Source Hierarchy: Prioritize .gov, .org, customs official sites. Ignore blogs.
     `;
 
@@ -197,10 +204,10 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
                     }},
                     strategyHints: { type: Type.OBJECT, properties: { tax: {type:Type.STRING}, logistics: {type:Type.STRING}, legal: {type:Type.STRING} } }
                 }},
-                alternatives: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { 
-                    country: { type: Type.STRING }, 
+                alternatives: { type: Type.ARRAY, nullable: true, items: { type: Type.OBJECT, properties: {
+                    country: { type: Type.STRING },
                     isoCode: { type: Type.STRING },
-                    profitMargin: { type: Type.NUMBER }, 
+                    profitMargin: { type: Type.NUMBER },
                     complianceRisk: { type: Type.STRING },
                     currency: { type: Type.STRING }
                 }}}
