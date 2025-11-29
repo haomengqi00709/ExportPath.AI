@@ -148,7 +148,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
   const [formState, setFormState] = useState<ExportInput>({
     productName: 'Electric Bicycle',
     originCountry: 'China',
-    destinationCountry: 'Germany',
+    destinationCountry: 'Canada',
     baseCost: 0,  // Start blank - user must enter their cost
     currency: 'USD',
     hsCode: '8711.60',
