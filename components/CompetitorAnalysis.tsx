@@ -24,6 +24,24 @@ const CompetitorAnalysis: React.FC<CompetitorAnalysisProps> = ({ data, language 
     return `https://www.google.com/search?q=${query}&tbm=shop`;
   };
 
+  const isValidProductUrl = (url: string | undefined): boolean => {
+    if (!url) return false;
+    try {
+      const urlObj = new URL(url);
+      // Filter out invalid URLs: relative paths, current domain, localhost, placeholder URLs
+      if (urlObj.hostname.includes('localhost') ||
+          urlObj.hostname.includes('vercel.app') ||
+          urlObj.hostname.includes('railway.app') ||
+          url.includes('pocket-tc') ||
+          url.includes('exportpath')) {
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
@@ -52,7 +70,7 @@ const CompetitorAnalysis: React.FC<CompetitorAnalysisProps> = ({ data, language 
         <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-300 mb-2">{t.topSimilar}</h4>
             {data.competitors.map((comp, idx) => {
-                const linkUrl = comp.url || getFallbackUrl(comp.name, comp.platform);
+                const linkUrl = isValidProductUrl(comp.url) ? comp.url : getFallbackUrl(comp.name, comp.platform);
                 return (
                     <div key={idx} className="bg-slate-950 border border-slate-800 p-3 rounded-lg flex justify-between items-center group hover:border-blue-500/30 transition-colors">
                         <div className="flex-1 min-w-0 mr-4">

@@ -142,7 +142,7 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
     const analysisPrompt = `
         Act as a senior International Trade Consultant.
         Perform a feasibility study based on the provided RESEARCH CONTEXT.
-        
+
         INPUT:
         Product: "${input.productName}", HS: "${input.hsCode}", Origin: "${input.originCountry}", Dest: "${input.destinationCountry}", Cost: ${input.baseCost} ${input.currency}.
         Retail Benchmark: ${input.benchmarkPrice || 'N/A'}.
@@ -152,7 +152,8 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
         1. Tariff Stability: Use 0% MFN for Furniture (HS 94) unless specific AD/Trade War found.
         2. Prices: Estimate B2B price from Retail context. Never return 0.
         3. Strategy: Include Tax, Legal (UFLPA/EUDR), Logistics strategies.
-        
+        4. Competitor URLs: ONLY include actual product URLs from search results. Do NOT generate placeholder or fake URLs. Omit url field if no actual product link found.
+
         IMPORTANT: Respond in ${LANGUAGE_NAMES[language]} language.
         Return strict JSON.
     `;
@@ -165,7 +166,7 @@ export const analyzeExportRoutes = async (input: ExportInput, language: Language
             type: Type.OBJECT,
             properties: {
                 marketIntelligence: { type: Type.OBJECT, properties: {
-                    competitors: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: {type:Type.STRING}, price: {type:Type.NUMBER}, features: {type:Type.STRING}, url: {type:Type.STRING}, platform: {type:Type.STRING} } } },
+                    competitors: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: {type:Type.STRING}, price: {type:Type.NUMBER}, features: {type:Type.STRING}, url: {type:Type.STRING, nullable:true}, platform: {type:Type.STRING, nullable:true} } } },
                     priceRange: { type: Type.OBJECT, properties: { min: {type:Type.NUMBER}, max: {type:Type.NUMBER}, average: {type:Type.NUMBER} } },
                     currency: { type: Type.STRING },
                     unit: { type: Type.STRING },
