@@ -2,7 +2,7 @@
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:**  Node.js 18+
 
 
 1. Install dependencies:
