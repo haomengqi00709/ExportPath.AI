@@ -400,11 +400,11 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
                 </div>
                 <p className="text-sm text-slate-400 font-medium">{t.uploadTitle}</p>
                 <p className="text-xs text-slate-500 mt-1">{t.uploadDesc}</p>
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*"
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     onChange={handleImageUpload}
                 />
             </div>
