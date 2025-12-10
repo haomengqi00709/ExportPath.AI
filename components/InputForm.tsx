@@ -217,11 +217,66 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
       setFormState(prev => ({ ...prev, [field]: value }));
   };
 
+  // Convert AVIF or other unsupported formats to JPEG
+  const convertImageToJPEG = async (file: File): Promise<File> => {
+    // Gemini supported formats: image/jpeg, image/png, image/gif, image/webp
+    const supportedFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+    if (supportedFormats.includes(file.type)) {
+      return file; // No conversion needed
+    }
+
+    console.log(`🔄 Converting ${file.type} to JPEG...`);
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Create canvas and draw image
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0);
+
+          // Convert to JPEG blob
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Failed to convert image'));
+              return;
+            }
+
+            // Create new File from blob
+            const convertedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+              type: 'image/jpeg'
+            });
+
+            console.log(`✅ Converted to JPEG: ${convertedFile.size} bytes`);
+            resolve(convertedFile);
+          }, 'image/jpeg', 0.95); // 95% quality
+        };
+
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log("📸 Image upload started:", file.name);
+    console.log("📸 Image upload started:", file.name, file.type);
     setError(null);
 
     const reader = new FileReader();
@@ -230,8 +285,11 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, onCancel, isLoading, in
 
     setIsAnalyzingImage(true);
     try {
+        // Convert to JPEG if needed
+        const processedFile = await convertImageToJPEG(file);
+
         console.log("🔍 Calling analyzeProductImage API...");
-        const result = await analyzeProductImage(file, formState.destinationCountry, formState.currency, language);
+        const result = await analyzeProductImage(processedFile, formState.destinationCountry, formState.currency, language);
         console.log("✅ Image analysis result:", result);
 
         setFormState(prev => ({
